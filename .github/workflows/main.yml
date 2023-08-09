@@ -24,8 +24,8 @@ jobs:
         run: |
           poetry run pip install -t dist .
           cd dist
-          mv boat_edit_to_githyb/lambda_function.py .
-          zip -x 'boat_edit_to_githyb*' '*.pyc' -r ../lambda.zip . 
+          mv boat_edit_to_github/lambda_function.py .
+          zip -x 'boat_edit_to_github*' '*.pyc' -r ../lambda.zip . 
       - name: cred
         uses: aws-actions/configure-aws-credentials@v1
         with:
