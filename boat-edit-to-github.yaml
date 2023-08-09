@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Serverless Specification template describing your function.
+Resources:
+  boatedittogithub:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: ''
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.11
+      InlineCode: >-
+        def lambda_handler(event, context):
+          print(event)
+      MemorySize: 128
+      Timeout: 3
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: Auto
+      Policies:
+        - S3CrudPolicy:
+            BucketName: boatregister
+        - SSMParameterReadPolicy:
+            ParameterName: GITHUB_TOKEN
+

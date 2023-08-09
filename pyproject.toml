@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "boat-edit-to-github"
+version = "0.1.0"
+description = ""
+authors = ["jcable <julian.cable@yahoo.com>"]
+readme = "README.md"
+packages = [{include = "boat_edit_to_github"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.31.0"
+
+[tool.poetry.group.dev.dependencies]
+boto3 = "^1.26.118"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
