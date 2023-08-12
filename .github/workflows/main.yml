@@ -34,4 +34,4 @@ jobs:
           aws-region: eu-west-1
       - name: deploy
         run: |
-          aws lambda update-function-code --function-name boat-edit-to-github --zip-file fileb://lambda.zip
+          aws lambda update-function-code --function-name web-edit-boat-to-github --zip-file fileb://lambda.zip
