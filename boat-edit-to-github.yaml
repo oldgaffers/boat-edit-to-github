@@ -39,4 +39,10 @@ Resources:
           - https://oga.org.uk
         MaxAge: 3
       TargetFunctionArn: !Ref lambda
-
+  lambdaUrlFunctionPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref lambda
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE

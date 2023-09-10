@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import boto3
 import requests
 
+url = 'https://api.github.com/repos/oldgaffers/boatregister/actions/workflows/crud.yml/dispatches'
+
 ssm = boto3.client('ssm')
 s3 = boto3.client('s3')
 
@@ -13,50 +15,43 @@ def json_from_object(bucket, key):
     text = r["Body"].read().decode('utf-8')
     return json.loads(text)
 
-def add_one_owner_member_data(name, members):
-    members = [row for row in members if f"{row['Firstname']} {row['Lastname']}".upper()==name]
+def get_members_by_name(name, members):
+    matching = [row for row in members if f"{row['Firstname']} {row['Lastname']}".upper()==name]
     r = []
-    for row in members:
+    for row in matching:
         o = {}
         o['member'] = row['Member Number']
         o['id'] = row['ID']
-        if len(members) > 1:
-            o['ambiguous'] = True
         r.append(o)
     return r
 
-def add_owner_member_data(boat):
-    d = datetime.now()
-    prev = (d - timedelta(days=1)).date().isoformat()
-    members = json_from_object('boatregister', 'gold/latest.json')
-    o = []
-    for owner in boat['ownerships']:
-        if 'id' in owner:
-            if 'name' in owner:
-                del owner['name']
-            o.append(owner)
-        elif 'current' in owner and owner['current'] and 'name' in owner:
-            name = name = owner['name'].upper().strip()
-            del owner['name']
-            l = add_one_owner_member_data(name, members)
-            if len(l) > 0:
-                for m in l:
-                    m.update(owner)
-                    o.append(m)
-            else:
-                o.append(owner) # current owner is not a member
+def owner_record(o, members):
+    name = o.get('name', '').upper().strip()
+    owner = {**o}
+    if 'name' in owner:
+        del owner['name']
+    if 'id' in owner:
+        return owner
+    if 'ID' in owner:
+        owner['id'] = owner['ID']
+        del owner['ID']
+        return owner
+    else:
+        l = get_members_by_name(name, members)
+        if len(l) == 0:
+            pass # current owner is not a member or the name didn't match, fall to default
+        elif len(l) == 1:
+            owner['id'] = l[0]['id']
+            owner['member'] = l[0]['member']
+            return owner
         else:
-            o.append(owner)
-    boat['ownerships'] = o
-    return boat
+            owner['might be'] = l
+    return { 'name': name.title(), **owner }
 
-def lambda_handler(event, context):
-    print(json.dumps(event))
-    body = json.loads(event['body'])
+def make_change_record(oga_no, body, members):
     boat = body['new']
     if 'ownerships' in boat:
-        boat = add_owner_member_data(boat)
-    oga_no = boat['oga_no']
+        boat['ownerships'] = [owner_record(o, members) for o in boat['ownerships']]
     if 'email' in body:
         email = body['email']
     else:
@@ -66,7 +61,7 @@ def lambda_handler(event, context):
         n = json.dumps(body['newItems'])
     else:
         n = ''
-    data = {
+    return {
         'ref': 'main',
         'inputs': {
             'oga_no': f"{oga_no}",
@@ -75,10 +70,8 @@ def lambda_handler(event, context):
             'new': n
         }
     }
-    if 'changes' in body:
-        b64 = base64.b64encode(json.dumps(body['changes']).encode('utf-8'))
-        data['inputs']['changed_fields'] = b64.decode('ascii')
-    url = 'https://api.github.com/repos/oldgaffers/boatregister/actions/workflows/crud.yml/dispatches'
+
+def deliver(oga_no, data):
     r = ssm.get_parameter(Name='GITHUB_TOKEN', WithDecryption=True)
     github_token = r['Parameter']['Value']
     headers = {
@@ -89,7 +82,6 @@ def lambda_handler(event, context):
     response = requests.post(url, headers=headers, data=json.dumps(data))
     if response.ok:
         outcome = f'pr requested for {oga_no}'
-        print(outcome)
         return {
             'statusCode': 200,
             'body': json.dumps(outcome)
@@ -99,3 +91,15 @@ def lambda_handler(event, context):
         'statusCode': response.status_code,
         'body': json.dumps(response.json())
     }
+
+def lambda_handler(event):
+    print(json.dumps(event))
+    members = json_from_object('boatregister', 'gold/latest.json')
+    body = json.loads(event['body'])
+    oga_no = body['new']['oga_no']
+    data = make_change_record(oga_no, body, members)
+    useChanges = False
+    if 'changes' in body and useChanges:
+        b64 = base64.b64encode(json.dumps(body['changes']).encode('utf-8'))
+        data['inputs']['changed_fields'] = b64.decode('ascii')
+    return deliver(oga_no, data)
