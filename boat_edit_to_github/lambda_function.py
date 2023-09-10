@@ -92,7 +92,7 @@ def deliver(oga_no, data):
         'body': json.dumps(response.json())
     }
 
-def lambda_handler(event):
+def lambda_handler(event, context):
     print(json.dumps(event))
     members = json_from_object('boatregister', 'gold/latest.json')
     body = json.loads(event['body'])
