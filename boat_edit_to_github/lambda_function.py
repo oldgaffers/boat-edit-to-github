@@ -56,6 +56,8 @@ def make_change_record(oga_no, body, members):
         email = body['email']
     else:
         email = 'boatregister@oga.org.uk'
+    if 'image_key' in boat:
+        print(oga_no, boat['image_key'])
     b64 = base64.b64encode(json.dumps(boat).encode('utf-8'))
     if 'newItems' in body:
         n = json.dumps(body['newItems'])
@@ -93,13 +95,24 @@ def deliver(oga_no, data):
     }
 
 def lambda_handler(event, context):
-    print(json.dumps(event))
-    members = json_from_object('boatregister', 'gold/latest.json')
-    body = json.loads(event['body'])
-    oga_no = body['new']['oga_no']
-    data = make_change_record(oga_no, body, members)
-    useChanges = False
-    if 'changes' in body and useChanges:
-        b64 = base64.b64encode(json.dumps(body['changes']).encode('utf-8'))
-        data['inputs']['changed_fields'] = b64.decode('ascii')
-    return deliver(oga_no, data)
+    # print(json.dumps(event))
+    if 'body' in event:
+        members = json_from_object('boatregister', 'gold/latest.json')
+        body = json.loads(event['body'])
+        if 'new' in body:
+            oga_no = body['new']['oga_no']
+            data = make_change_record(oga_no, body, members)
+            # print(data)
+            useChanges = False
+            if 'changes' in body and useChanges:
+                b64 = base64.b64encode(json.dumps(body['changes']).encode('utf-8'))
+                data['inputs']['changed_fields'] = b64.decode('ascii')
+            return deliver(oga_no, data)
+        else:
+            print('unrecognised body', json.dumps(body))
+    else:
+        print('unrecognised event', json.dumps(event))
+    return {
+        'statusCode': 500,
+        'body': json.dumps('something went wrong')
+    }
