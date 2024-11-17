@@ -56,8 +56,6 @@ def make_change_record(oga_no, body, members):
         email = body['email']
     else:
         email = 'boatregister@oga.org.uk'
-    if 'image_key' in boat:
-        print(oga_no, boat['image_key'])
     b64 = base64.b64encode(json.dumps(boat).encode('utf-8'))
     if 'newItems' in body:
         n = json.dumps(body['newItems'])
@@ -102,7 +100,7 @@ def lambda_handler(event, context):
         if 'new' in body:
             oga_no = body['new']['oga_no']
             data = make_change_record(oga_no, body, members)
-            # print(data)
+            print(data)
             useChanges = False
             if 'changes' in body and useChanges:
                 b64 = base64.b64encode(json.dumps(body['changes']).encode('utf-8'))
