@@ -1,7 +1,6 @@
 import json
 import base64
 import json
-from datetime import datetime, timedelta
 import boto3
 import requests
 
@@ -25,28 +24,32 @@ def get_members_by_name(name, members):
         r.append(o)
     return r
 
+def get_member_by_id(gold_id, members):
+    m = [m for m in members if m['ID'] == gold_id]
+    if len(m) > 0:
+        return m[0]
+    return None
+
 def owner_record(o, members):
-    name = o.get('name', '').upper().strip()
     owner = {**o}
-    if 'name' in owner:
-        del owner['name']
     if 'id' in owner:
+        member = get_member_by_id(owner['id'], members)
+        if member['Status'] in ['Deceased', 'Left OGA']:
+            del owner['id']
+            del owner['member']
+            owner['name'] = f"{member['Firstname'] {member['Lastname']}}".title()
         return owner
-    if 'ID' in owner:
-        owner['id'] = owner['ID']
-        del owner['ID']
+    name = owner.get('name', '').upper().strip()
+    l = get_members_by_name(name, members)
+    if len(l) != 1:
+        return owner # current owner is not a member or the name didn't match
+    member = l[0]
+    if member['Status'] in ['Deceased', 'Left OGA']:
         return owner
-    else:
-        l = get_members_by_name(name, members)
-        if len(l) == 0:
-            pass # current owner is not a member or the name didn't match, fall to default
-        elif len(l) == 1:
-            owner['id'] = l[0]['id']
-            owner['member'] = l[0]['member']
-            return owner
-        else:
-            owner['might be'] = l
-    return { 'name': name.title(), **owner }
+    del owner['name']
+    owner['id'] = member['id']
+    owner['member'] = member['member']
+    return owner
 
 def make_change_record(oga_no, body, members):
     boat = body['new']
