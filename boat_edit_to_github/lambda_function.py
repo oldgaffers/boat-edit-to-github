@@ -47,8 +47,8 @@ def owner_record(o, members):
     if member['Status'] in ['Deceased', 'Left OGA']:
         return owner
     del owner['name']
-    owner['id'] = member['id']
-    owner['member'] = member['member']
+    owner['id'] = member['ID']
+    owner['member'] = member['Member Number']
     return owner
 
 def make_change_record(oga_no, body, members):
