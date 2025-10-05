@@ -8,7 +8,7 @@ Resources:
       Description: Respond to a web hook and create or update a PR for a boat in github.
       FunctionName: web-edit-boat-to-github
       Handler: lambda_function.lambda_handler
-      Runtime: python3.11
+      Runtime: python3.13
       InlineCode: >-
         import json
         def lambda_handler(event, context):

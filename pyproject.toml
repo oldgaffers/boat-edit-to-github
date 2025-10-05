@@ -7,13 +7,13 @@ readme = "README.md"
 packages = [{include = "boat_edit_to_github"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
-requests = "^2.31.0"
-pytest = "^7.4.2"
-coverage = "^7.3.1"
+python = "^3.13"
+requests = "^2.32.5"
 
 [tool.poetry.group.dev.dependencies]
 boto3 = "^1.26.118"
+pytest = "^8.4.2"
+coverage = "^7.10.7"
 
 [build-system]
 requires = ["poetry-core"]
