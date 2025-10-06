@@ -15,14 +15,7 @@ def json_from_object(bucket, key):
     return json.loads(text)
 
 def get_members_by_name(name, members):
-    matching = [row for row in members if f"{row['Firstname']} {row['Lastname']}".upper()==name]
-    r = []
-    for row in matching:
-        o = {}
-        o['member'] = row['Member Number']
-        o['id'] = row['ID']
-        r.append(o)
-    return r
+    return [row for row in members if f"{row['Firstname']} {row['Lastname']}".upper()==name]
 
 def get_member_by_id(gold_id, members):
     m = [m for m in members if m['ID'] == gold_id]
@@ -44,6 +37,7 @@ def owner_record(o, members):
     if len(l) != 1:
         return owner # current owner is not a member or the name didn't match
     member = l[0]
+
     if member['Status'] in ['Deceased', 'Left OGA']:
         return owner
     del owner['name']
