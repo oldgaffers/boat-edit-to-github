@@ -37,7 +37,7 @@ def owner_record(o, members):
         if member['Status'] in ['Deceased', 'Left OGA']:
             del owner['id']
             del owner['member']
-            owner['name'] = f"{member['Firstname'] {member['Lastname']}}".title()
+            owner['name'] = f"{member['Firstname']} {member['Lastname']}".title()
         return owner
     name = owner.get('name', '').upper().strip()
     l = get_members_by_name(name, members)
