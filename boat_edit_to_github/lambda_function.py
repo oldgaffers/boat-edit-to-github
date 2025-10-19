@@ -32,18 +32,21 @@ def owner_record(o, members):
             del owner['member']
             owner['name'] = f"{member['Firstname']} {member['Lastname']}".title()
         return owner
+    if 'end' in owner: # leave names in if not current
+        return owner
+    if 'start' in owner and owner['start'] < 1963: # probably not a member 
+        return owner
     name = owner.get('name', '').upper().strip()
     l = get_members_by_name(name, members)
-    print('O', name, json.dumps(l))
     if len(l) != 1:
         return owner # current owner is not a member or the name didn't match
     member = l[0]
-
     if member['Status'] in ['Deceased', 'Left OGA']:
         return owner
     del owner['name']
     owner['id'] = member['ID']
     owner['member'] = member['Member Number']
+    owner['note'] = 'please check this is not a namesake'
     return owner
 
 def make_change_record(oga_no, body, members):
