@@ -34,6 +34,7 @@ def owner_record(o, members):
         return owner
     name = owner.get('name', '').upper().strip()
     l = get_members_by_name(name, members)
+    print('O', name, json.dumps(l))
     if len(l) != 1:
         return owner # current owner is not a member or the name didn't match
     member = l[0]
