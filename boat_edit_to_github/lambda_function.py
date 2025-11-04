@@ -113,7 +113,7 @@ def lambda_handler(event, context):
                 b64 = base64.b64encode(json.dumps(body['changes']).encode('utf-8'))
                 data['inputs']['changed_fields'] = b64.decode('ascii')
             return deliver(body, data, f"pr requested for {body['new']['oga_no']}")
-        elif: 'merge' in body:
+        elif 'merge' in body:
             data = make_merge_change(body)
             return deliver(body, data, 'pr requested for a non-boat change')
         else:
