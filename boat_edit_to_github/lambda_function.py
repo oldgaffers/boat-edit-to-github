@@ -55,13 +55,17 @@ def make_boat_change_record(body):
     if 'ownerships' in boat:
         boat['ownerships'] = [owner_record(o, members) for o in boat['ownerships']]
     b64 = base64.b64encode(json.dumps(boat).encode('utf-8'))
+    if 'newItems' in body:
+        n = json.dumps(body['newItems'])
+    else:
+        n = ''
     return {
         'ref': 'main',
         'inputs': {
             'oga_no': f"{boat['oga_no']}",
             'data': b64.decode('ascii'),
             'email': body.get('email', 'boatregister@oga.org.uk'),
-            'new': json.dumps(body.get('newItems', ''))
+            'new': n
         }
     }
 
