@@ -49,30 +49,22 @@ def owner_record(o, members):
     owner['note'] = 'please check this is not a namesake'
     return owner
 
-def make_change_record(oga_no, body, members):
+def make_boat_change_record(body, members):
     boat = body['new']
     if 'ownerships' in boat:
         boat['ownerships'] = [owner_record(o, members) for o in boat['ownerships']]
-    if 'email' in body:
-        email = body['email']
-    else:
-        email = 'boatregister@oga.org.uk'
     b64 = base64.b64encode(json.dumps(boat).encode('utf-8'))
-    if 'newItems' in body:
-        n = json.dumps(body['newItems'])
-    else:
-        n = ''
     return {
         'ref': 'main',
         'inputs': {
-            'oga_no': f"{oga_no}",
+            'oga_no': f"{boat['oga_no']}",
             'data': b64.decode('ascii'),
-            'email': email,
-            'new': n
+            'email': body.get('email', 'boatregister@oga.org.uk'),
+            'new': json.dumps(body.get('newItems', ''))
         }
     }
 
-def deliver(oga_no, data):
+def deliver(body, data):
     r = ssm.get_parameter(Name='GITHUB_TOKEN', WithDecryption=True)
     github_token = r['Parameter']['Value']
     headers = {
@@ -82,6 +74,7 @@ def deliver(oga_no, data):
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
     if response.ok:
+        oga_no = body['new']['oga_no']
         outcome = f'pr requested for {oga_no}'
         return {
             'statusCode': 200,
@@ -99,14 +92,13 @@ def lambda_handler(event, context):
         members = json_from_object('boatregister', 'gold/latest.json')
         body = json.loads(event['body'])
         if 'new' in body:
-            oga_no = body['new']['oga_no']
-            data = make_change_record(oga_no, body, members)
+            data = make_boat_change_record(, body, members)
             print(data)
             useChanges = False
             if 'changes' in body and useChanges:
                 b64 = base64.b64encode(json.dumps(body['changes']).encode('utf-8'))
                 data['inputs']['changed_fields'] = b64.decode('ascii')
-            return deliver(oga_no, data)
+            return deliver(body, data)
         else:
             print('unrecognised body', json.dumps(body))
     else:
