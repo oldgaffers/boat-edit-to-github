@@ -49,7 +49,8 @@ def owner_record(o, members):
     owner['note'] = 'please check this is not a namesake'
     return owner
 
-def make_boat_change_record(body, members):
+def make_boat_change_record(body):
+    members = json_from_object('boatregister', 'gold/latest.json')
     boat = body['new']
     if 'ownerships' in boat:
         boat['ownerships'] = [owner_record(o, members) for o in boat['ownerships']]
@@ -64,7 +65,19 @@ def make_boat_change_record(body, members):
         }
     }
 
-def deliver(body, data):
+def make_merge_change(body):
+    change = { 'merge': body['merge'], 'keep': body['keep'], 'field': body['field'] }
+    b64 = base64.b64encode(json.dumps(change).encode('utf-8'))
+    return {
+        'ref': 'main',
+        'inputs': {
+            'id': f"{body['id']}",
+            'data': b64.decode('ascii'),
+            'email': body.get('email', 'boatregister@oga.org.uk'),
+        }
+    }
+
+def deliver(body, data, outcome):
     r = ssm.get_parameter(Name='GITHUB_TOKEN', WithDecryption=True)
     github_token = r['Parameter']['Value']
     headers = {
@@ -74,8 +87,6 @@ def deliver(body, data):
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
     if response.ok:
-        oga_no = body['new']['oga_no']
-        outcome = f'pr requested for {oga_no}'
         return {
             'statusCode': 200,
             'body': json.dumps(outcome)
@@ -89,16 +100,18 @@ def deliver(body, data):
 def lambda_handler(event, context):
     # print(json.dumps(event))
     if 'body' in event:
-        members = json_from_object('boatregister', 'gold/latest.json')
         body = json.loads(event['body'])
         if 'new' in body:
-            data = make_boat_change_record(, body, members)
+            data = make_boat_change_record(body)
             print(data)
             useChanges = False
             if 'changes' in body and useChanges:
                 b64 = base64.b64encode(json.dumps(body['changes']).encode('utf-8'))
                 data['inputs']['changed_fields'] = b64.decode('ascii')
-            return deliver(body, data)
+            return deliver(body, data, f"pr requested for {body['new']['oga_no']}")
+        elif: 'merge' in body:
+            data = make_merge_change(body)
+            return deliver(body, data, 'pr requested for a non-boat change')
         else:
             print('unrecognised body', json.dumps(body))
     else:
