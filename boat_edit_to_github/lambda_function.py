@@ -27,7 +27,7 @@ def owner_record(o, members):
     owner = {**o}
     if 'id' in owner:
         member = get_member_by_id(owner['id'], members)
-        if member['Status'] in ['Deceased', 'Left OGA']:
+        if member is not None and member['Status'] in ['Deceased', 'Left OGA']:
             del owner['id']
             del owner['member']
             owner['name'] = f"{member['Firstname']} {member['Lastname']}".title()
