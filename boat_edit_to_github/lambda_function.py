@@ -34,7 +34,7 @@ def owner_record(o, members):
         return owner
     if 'end' in owner: # leave names in if not current
         return owner
-    if 'start' in owner and owner['start'] < 1963: # probably not a member 
+    if 'start' in owner and int(owner['start']) < 1963: # probably not a member 
         return owner
     name = owner.get('name', '').upper().strip()
     l = get_members_by_name(name, members)
