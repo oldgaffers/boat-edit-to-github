@@ -32,7 +32,7 @@ def owner_record(o, members):
                 del owner['id']
                 del owner['member']
                 owner['name'] = f"{member['Firstname']} {member['Lastname']}".title()
-            elif 'name' in member:
+            elif 'name' in owner:
                 del owner ['name']
             return owner
         del owner['id']
