@@ -27,11 +27,16 @@ def owner_record(o, members):
     owner = {**o}
     if 'id' in owner:
         member = get_member_by_id(owner['id'], members)
-        if member is not None and member['Status'] in ['Deceased', 'Left OGA']:
-            del owner['id']
-            del owner['member']
-            owner['name'] = f"{member['Firstname']} {member['Lastname']}".title()
-        return owner
+        if member is not None:
+            if member['Status'] in ['Deceased', 'Left OGA']:
+                del owner['id']
+                del owner['member']
+                owner['name'] = f"{member['Firstname']} {member['Lastname']}".title()
+            elif 'name' in member:
+                del owner ['name']
+            return owner
+        del owner['id']
+        del owner['member']
     if 'end' in owner: # leave names in if not current
         return owner
     if 'start' in owner and int(owner['start']) < 1963: # probably not a member 
