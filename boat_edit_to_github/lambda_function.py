@@ -86,7 +86,7 @@ def make_merge_change(body):
         }
     }
 
-def deliver(body, data, outcome):
+def deliver(data, outcome):
     r = ssm.get_parameter(Name='GITHUB_TOKEN', WithDecryption=True)
     github_token = r['Parameter']['Value']
     headers = {
@@ -106,25 +106,34 @@ def deliver(body, data, outcome):
         'body': json.dumps(response.json())
     }
 
+def process(body):
+    if 'new' in body:
+        data = make_boat_change_record(body)
+        # print(data)
+        useChanges = False
+        if 'changes' in body and useChanges:
+            b64 = base64.b64encode(json.dumps(body['changes']).encode('utf-8'))
+            data['inputs']['changed_fields'] = b64.decode('ascii')
+        return deliver(data, f"pr requested for {body['new']['oga_no']}")
+    if 'merge' in body:
+        data = make_merge_change(body)
+        return deliver(data, 'pr requested for a non-boat change')
+    print('unrecognised body', json.dumps(body))
+    return {
+        'statusCode': 422,
+        'body': json.dumps('bad input')
+    }
+
 def lambda_handler(event, context):
     # print(json.dumps(event))
-    if 'body' in event:
-        body = json.loads(event['body'])
-        if 'new' in body:
-            data = make_boat_change_record(body)
-            print(data)
-            useChanges = False
-            if 'changes' in body and useChanges:
-                b64 = base64.b64encode(json.dumps(body['changes']).encode('utf-8'))
-                data['inputs']['changed_fields'] = b64.decode('ascii')
-            return deliver(body, data, f"pr requested for {body['new']['oga_no']}")
-        elif 'merge' in body:
-            data = make_merge_change(body)
-            return deliver(body, data, 'pr requested for a non-boat change')
+    try:
+        if 'body' in event:
+            return process(json.loads(event['body']))
         else:
-            print('unrecognised body', json.dumps(body))
-    else:
-        print('unrecognised event', json.dumps(event))
+            print('unrecognised event', json.dumps(event))
+    except Exception as e:
+        print('error', str(e))
+        print(json.dumps(event))
     return {
         'statusCode': 500,
         'body': json.dumps('something went wrong')
