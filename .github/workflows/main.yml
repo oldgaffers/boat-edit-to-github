@@ -37,3 +37,4 @@ jobs:
       - name: deploy
         run: |
           aws lambda update-function-code --function-name web-edit-boat-to-github --zip-file fileb://lambda.zip
+          aws update-stack web-edit-boat-to-github --stack-name --template-body file://boat_edit_to_github.yaml
