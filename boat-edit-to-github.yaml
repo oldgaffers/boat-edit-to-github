@@ -9,6 +9,8 @@ Resources:
       FunctionName: web-edit-boat-to-github
       Handler: lambda_function.lambda_handler
       Runtime: python3.13
+      Architectures:
+        - arm64
       InlineCode: >-
         import json
         def lambda_handler(event, context):
