@@ -13,16 +13,14 @@ jobs:
     name: deploy lambda from source
     runs-on: ubuntu-24.04-arm
     steps:
-      - name: checkout source code
-        uses: actions/checkout@v1
-      - name: install python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v6
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.13' 
-      - name: install poetry
-        uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: '1.2.2'
+          python-version: '3.13'
+          cache: 'poetry'
+      - run: poetry install
       - name: package
         run: |
           poetry run pip install -t dist .
@@ -30,7 +28,7 @@ jobs:
           mv boat_edit_to_github/lambda_function.py .
           zip -x 'boat_edit_to_github*' '*.pyc' -r ../lambda.zip . 
       - name: cred
-        uses: aws-actions/configure-aws-credentials@6.1.0
+        uses: aws-actions/configure-aws-credentials@v6.1.0
         with:
           aws-region: eu-west-1
           role-to-assume: arn:aws:iam::651845762820:role/github-OIDC-Role-JdfwPtWdASUt
