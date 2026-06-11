@@ -108,7 +108,7 @@ def deliver(data, outcome):
 
 def process(body):
     if 'new' in body:
-        print(json.dumps(body)
+        print(json.dumps(body))
         data = make_boat_change_record(body)
         # print(data)
         useChanges = False
